@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>归并排序可视化演示 | 分治算法</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #a0a0ff;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+
+        /* 可视化区域 */
+        .visualization {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 300px;
+        }
+
+        .array-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 280px;
+        }
+
+        .bar {
+            background: linear-gradient(180deg, #6ee7b7, #3b82f6);
+            border-radius: 8px 8px 4px 4px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            padding-bottom: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .bar span {
+            position: absolute;
+            top: -22px;
+            font-size: 12px;
+            color: #ddd;
+        }
+
+        /* 递归树区域 */
+        .recursion-tree {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tree-title {
+            color: #ffd966;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tree-title::before {
+            content: "🌳";
+            font-size: 1.2rem;
+        }
+
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        .tree-level {
+            display: flex;
+            justify-content: center;
+            margin: 5px 0;
+            flex-wrap: wrap;
+        }
+
+        .tree-node {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            padding: 8px 15px;
+            margin: 5px 10px;
+            color: white;
+            font-size: 13px;
+            font-family: monospace;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .tree-node.merging {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(245,87,108,0.5);
+        }
+
+        .tree-node.done {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        /* 控制面板 */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 5px 15px;
+            border-radius: 40px;
+        }
+
+        .speed-control label {
+            color: white;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        .algorithm-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            color: #ccc;
+            font-size: 0.85rem;
+        }
+
+        .algorithm-info h3 {
+            color: #6ee7b7;
+            margin-bottom: 10px;
+        }
+
+        .complexity {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .complexity span {
+            background: rgba(255,255,255,0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+        }
+
+        .status {
+            text-align: center;
+            color: #ffd966;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔄 归并排序 (Merge Sort)</h1>
+    <div class="subtitle">分治法 | 稳定排序 | 可视化分治过程</div>
+
+    <!-- 可视化区域 -->
+    <div class="visualization">
+        <div class="array-container" id="arrayContainer"></div>
+    </div>
+
+    <!-- 递归树区域 - 展示归并过程 -->
+    <div class="recursion-tree">
+        <div class="tree-title">归并过程树 (自顶向下拆分 → 自底向上归并)</div>
+        <div class="tree-container" id="treeContainer">
+            <div class="tree-level" id="treeLevel0"></div>
+        </div>
+    </div>
+
+    <!-- 控制面板 -->
+    <div class="controls">
+        <button id="sortBtn" class="sort-btn">🚀 开始归并排序</button>
+        <button id="resetBtn">🔄 随机重置</button>
+        <div class="speed-control">
+            <label>⏩ 速度</label>
+            <input type="range" id="speedSlider" min="100" max="1500" value="600">
+        </div>
+    </div>
+
+    <!-- 算法说明 -->
+    <div class="algorithm-info">
+        <h3>📖 归并排序 (Merge Sort) 原理</h3>
+        <p>归并排序是建立在归并操作上的一种有效的排序算法，采用分治法（Divide and Conquer）：
+            <strong>分割 → 递归排序 → 合并</strong>
+        </p>
+        <ul style="margin-left: 20px; margin-top: 8px;">
+            <li>✂️ <strong>分割</strong>：将数组从中间分成两个子数组，递归地分割直到每个子数组只有一个元素</li>
+            <li>🔄 <strong>归并</strong>：将两个有序子数组合并成一个有序数组，逐层向上合并</li>
+            <li>✅ <strong>完成</strong>：最终合并成完整的有序数组</li>
+        </ul>
+        <div class="complexity">
+            <span>📊 时间复杂度: O(n log n) 最优/平均/最坏</span>
+            <span>💾 空间复杂度: O(n)</span>
+            <span>⚡ 稳定性: 稳定排序</span>
+        </div>
+        <p style="margin-top: 10px; color: #aaa;">✨ <strong>与冒泡/选择/插入/快速排序不同</strong>：归并排序是分治法代表，稳定且保证 O(n log n) 时间复杂度</p>
+    </div>
+    <div class="status" id="status">✨ 点击"开始归并排序"观察分治过程</div>
+</div>
+
+<script>
+    // 初始数组
+    let originalArray = [38, 27, 43, 3, 9, 82, 10, 25, 15, 8];
+    let currentArray = [...originalArray];
+    let sorting = false;
+    let speed = 600;
+    let animationSteps = [];
+    let stepIndex = 0;
+    let animationInterval = null;
+    
+    // DOM 元素
+    const arrayContainer = document.getElementById('arrayContainer');
+    const treeContainer = document.getElementById('treeContainer');
+    const sortBtn = document.getElementById('sortBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const speedSlider = document.getElementById('speedSlider');
+    const statusDiv = document.getElementById('status');
+    
+    // 颜色映射
+    function getColor(value, maxVal) {
+        const ratio = value / maxVal;
+        const r = Math.floor(70 + 185 * ratio);
+        const g = Math.floor(100 + 100 * (1 - ratio));
+        const b = Math.floor(200 + 55 * (1 - ratio));
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+    
+    // 绘制柱状图
+    function drawArray(arr, highlightIndices = [], isMerging = false) {
+        arrayContainer.innerHTML = '';
+        if (!arr.length) return;
+        const maxVal = Math.max(...arr, 1);
+        const containerWidth = arrayContainer.clientWidth || 800;
+        const barWidth = Math.min(70, Math.max(35, (containerWidth - 40) / arr.length - 6));
+        
+        arr.forEach((value, idx) => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            const height = 30 + (value / maxVal) * 180;
+            bar.style.height = height + 'px';
+            bar.style.width = barWidth + 'px';
+            bar.style.background = highlightIndices.includes(idx) && isMerging 
+                ? 'linear-gradient(180deg, #f093fb, #f5576c)' 
+                : `linear-gradient(180deg, #6ee7b7, #3b82f6)`;
+            bar.innerHTML = `<span>${value}</span>`;
+            arrayContainer.appendChild(bar);
+        });
+    }
+    
+    // 绘制递归树（显示分割和归并状态）
+    function drawTree(mergeHistory = []) {
+        // 简化版：显示原始数组和排序后的数组，以及当前归并层级
+        treeContainer.innerHTML = '';
+        const levelsDiv = document.createElement('div');
+        levelsDiv.className = 'tree-container';
+        
+        // 显示原始分割（第一层：完整数组）
+        const level0 = document.createElement('div');
+        level0.className = 'tree-level';
+        const rootNode = document.createElement('div');
+        rootNode.className = 'tree-node ' + (mergeHistory.includes('root') ? 'merging' : '');
+        rootNode.textContent = `[${currentArray.join(', ')}]`;
+        level0.appendChild(rootNode);
+        levelsDiv.appendChild(level0);
+        
+        // 如果排序完成，显示归并过程
+        if (mergeHistory.length > 0) {
+            const level1 = document.createElement('div');
+            level1.className = 'tree-level';
+            const mid = Math.floor(currentArray.length / 2);
+            const leftPart = currentArray.slice(0, mid);
+            const rightPart = currentArray.slice(mid);
+            const leftNode = document.createElement('div');
+            leftNode.className = 'tree-node';
+            leftNode.textContent = `[${leftPart.join(', ')}]`;
+            const rightNode = document.createElement('div');
+            rightNode.className = 'tree-node';
+            rightNode.textContent = `[${rightPart.join(', ')}]`;
+            level1.appendChild(leftNode);
+            level1.appendChild(rightNode);
+            levelsDiv.appendChild(level1);
+        }
+        
+        // 显示最终排序结果
+        const finalLevel = document.createElement('div');
+        finalLevel.className = 'tree-level';
+        const finalNode = document.createElement('div');
+        finalNode.className = 'tree-node done';
+        const sortedArr = [...currentArray].sort((a,b) => a-b);
+        finalNode.textContent = `✅ 排序后: [${sortedArr.join(', ')}]`;
+        finalLevel.appendChild(finalNode);
+        levelsDiv.appendChild(finalLevel);
+        
+        treeContainer.appendChild(levelsDiv);
+    }
+    
+    // 生成归并排序的动画步骤
+    function generateMergeSortSteps(arr) {
+        const steps = [];
+        const array = [...arr];
+        
+        function merge(left, mid, right, currentArr) {
+            const leftArr = currentArr.slice(left, mid + 1);
+            const rightArr = currentArr.slice(mid + 1, right + 1);
+            let i = 0, j = 0, k = left;
+            const mergeSteps = [];
+            
+            while (i < leftArr.length && j < rightArr.length) {
+                if (leftArr[i] <= rightArr[j]) {
+                    mergeSteps.push({ type: 'compare', indices: [k], value: leftArr[i] });
+                    currentArr[k] = leftArr[i];
+                    i++;
+                } else {
+                    mergeSteps.push({ type: 'compare', indices: [k], value: rightArr[j] });
+                    currentArr[k] = rightArr[j];
+                    j++;
+                }
+                mergeSteps.push({ type: 'set', array: [...currentArr], mergeIndices: [k] });
+                k++;
+            }
+            
+            while (i < leftArr.length) {
+                mergeSteps.push({ type: 'set', array: [...currentArr], mergeIndices: [k] });
+                currentArr[k] = leftArr[i];
+                i++;
+                k++;
+            }
+            
+            while (j < rightArr.length) {
+                mergeSteps.push({ type: 'set', array: [...currentArr], mergeIndices: [k] });
+                currentArr[k] = rightArr[j];
+                j++;
+                k++;
+            }
+            
+            return { steps: mergeSteps, array: currentArr };
+        }
+        
+        function mergeSort(left, right, currentArr) {
+            if (left >= right) return { steps: [], array: currentArr };
+            
+            const mid = Math.floor((left + right) / 2);
+            // 记录分割步骤
+            steps.push({ type: 'divide', left, mid, right, array: [...currentArr] });
+            
+            const leftResult = mergeSort(left, mid, currentArr);
+            currentArr = leftResult.array;
+            const rightResult = mergeSort(mid + 1, right, currentArr);
+            currentArr = rightResult.array;
+            
+            steps.push({ type: 'beforeMerge', left, mid, right, array: [...currentArr] });
+            const mergeResult = merge(left, mid, right, currentArr);
+            steps.push(...mergeResult.steps);
+            steps.push({ type: 'afterMerge', left, right, array: [...mergeResult.array] });
+            
+            return { steps: steps, array: mergeResult.array };
+        }
+        
+        mergeSort(0, array.length - 1, array);
+        steps.push({ type: 'done', array: [...array] });
+        return steps;
+    }
+    
+    // 播放动画
+    async function playSort() {
+        if (sorting) return;
+        sorting = true;
+        sortBtn.disabled = true;
+        resetBtn.disabled = true;
+        statusDiv.innerHTML = '🔄 归并排序执行中... 正在分割和归并';
+        
+        const steps = generateMergeSortSteps(currentArray);
+        let stepIdx = 0;
+        
+        function playStep() {
+            if (stepIdx >= steps.length) {
+                // 排序完成
+                sorting = false;
+                sortBtn.disabled = false;
+                resetBtn.disabled = false;
+                statusDiv.innerHTML = '✅ 排序完成！归并排序 O(n log n) 完成排序';
+                drawArray(currentArray);
+                drawTree(['done']);
+                if (animationInterval) clearInterval(animationInterval);
+                animationInterval = null;
+                return;
+            }
+            
+            const step = steps[stepIdx];
+            
+            if (step.type === 'divide') {
+                statusDiv.innerHTML = `✂️ 分割: 区间 [${step.left}, ${step.right}] 从中间分开`;
+                drawArray(step.array);
+            } 
+            else if (step.type === 'beforeMerge') {
+                statusDiv.innerHTML = `🔄 准备归并: 左区间 [${step.left}, ${step.mid}] 和 右区间 [${step.mid+1}, ${step.right}]`;
+                drawArray(step.array);
+            }
+            else if (step.type === 'set') {
+                currentArray = [...step.array];
+                drawArray(currentArray, step.mergeIndices || [], true);
+            }
+            else if (step.type === 'afterMerge') {
+                currentArray = [...step.array];
+                drawArray(currentArray);
+                statusDiv.innerHTML = `✅ 归并完成: 区间 [${step.left}, ${step.right}] 已有序`;
+            }
+            else if (step.type === 'done') {
+                currentArray = [...step.array];
+                drawArray(currentArray);
+                statusDiv.innerHTML = '🎉 归并排序完成！';
+                sorting = false;
+                sortBtn.disabled = false;
+                resetBtn.disabled = false;
+                if (animationInterval) clearInterval(animationInterval);
+                animationInterval = null;
+                drawTree(['done']);
+                return;
+            }
+            
+            stepIdx++;
+        }
+        
+        if (animationInterval) clearInterval(animationInterval);
+        animationInterval = setInterval(playStep, speed);
+    }
+    
+    // 重置数组
+    function resetArray() {
+        if (sorting) return;
+        if (animationInterval) {
+            clearInterval(animationInterval);
+            animationInterval = null;
+        }
+        // 生成新随机数组
+        const newArr = [];
+        for (let i = 0; i < 10; i++) {
+            newArr.push(Math.floor(Math.random() * 80) + 10);
+        }
+        originalArray = [...newArr];
+        currentArray = [...newArr];
+        drawArray(currentArray);
+        drawTree([]);
+        statusDiv.innerHTML = '✨ 已重置新数组，点击"开始归并排序"观察分治过程';
+        sortBtn.disabled = false;
+        resetBtn.disabled = false;
+        sorting = false;
+    }
+    
+    // 速度控制
+    speedSlider.addEventListener('input', (e) => {
+        speed = parseInt(e.target.value);
+        if (animationInterval) {
+            // 动态调整速度需要重启，简单处理：提示重新开始
+            if (sorting) {
+                statusDiv.innerHTML = '⚠️ 速度已更改，请重新开始排序';
+            }
+        }
+    });
+    
+    sortBtn.addEventListener('click', () => {
+        if (sorting) return;
+        if (animationInterval) clearInterval(animationInterval);
+        playSort();
+    });
+    
+    resetBtn.addEventListener('click', resetArray);
+    
+    // 初始绘制
+    drawArray(currentArray);
+    drawTree([]);
+</script>
+</body>
+</html>
