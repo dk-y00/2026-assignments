@@ -1,0 +1,5 @@
+dfs:A → B → D → C → E
+bfs:第0层: A
+第1层: B, C
+第2层: D, E
+访问顺序: A → B → C → D → E
