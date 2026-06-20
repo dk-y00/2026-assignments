@@ -1,0 +1,103 @@
+import heapq
+
+# 图的数据
+# 顶点
+V = 6
+vertices = ['A', 'B', 'C', 'D', 'E', 'F']
+# 顶点名 → 索引 
+idx = {v: i for i, v in enumerate(vertices)}
+
+# 邻接表
+graph = [[] for _ in range(V)]
+edges = []  # 用于 Kruskal
+
+# 添加边
+edge_data = [
+    ('A', 'B', 2),
+    ('B', 'C', 4),
+    ('A', 'D', 3),
+    ('B', 'E', 1),
+    ('C', 'F', 5),
+    ('D', 'E', 6),
+    ('E', 'F', 2),
+]
+
+for u, v, w in edge_data:
+    iu, iv = idx[u], idx[v]
+    graph[iu].append((iv, w))
+    graph[iv].append((iu, w))
+    edges.append((w, iu, iv))  # Kruskal 需要 (权重, u, v)
+
+
+# Prim 算法
+def prim(start_name):
+    start = idx[start_name]
+    INF = float('inf')
+    dist = [INF] * V
+    used = [False] * V
+    parent = [-1] * V  # 记录 MST 中每个顶点的父结点
+    dist[start] = 0
+    pq = [(0, start)]
+    total_weight = 0
+
+    while pq:
+        d, u = heapq.heappop(pq)
+        if used[u]:
+            continue
+        used[u] = True
+        total_weight += d
+
+        for v, w in graph[u]:
+            if not used[v] and w < dist[v]:
+                dist[v] = w
+                parent[v] = u
+                heapq.heappush(pq, (w, v))
+
+    # 输出
+    print("Prim 算法 MST 边集:")
+    for i in range(V):
+        if parent[i] != -1:
+            print(f"  {vertices[parent[i]]} - {vertices[i]} : {dist[i]}")
+    print(f"  MST 总权值: {total_weight}\n")
+
+
+# Kruskal 算法
+def kruskal():
+    # 并查集
+    fa = list(range(V))
+
+    def find(x):
+        if fa[x] != x:
+            fa[x] = find(fa[x])
+        return fa[x]
+
+    def union(x, y):
+        rx, ry = find(x), find(y)
+        if rx == ry:
+            return False
+        fa[ry] = rx
+        return True
+
+    # 按权重排序
+    edges.sort()
+    mst_edges = []
+    total_weight = 0
+
+    for w, u, v in edges:
+        if union(u, v):
+            mst_edges.append((w, u, v))
+            total_weight += w
+            if len(mst_edges) == V - 1:
+                break
+
+    # 输出 MST
+    print("Kruskal 算法 MST 边集:")
+    for w, u, v in mst_edges:
+        print(f"  {vertices[u]} - {vertices[v]} : {w}")
+    print(f"  MST 总权值: {total_weight}\n")
+
+
+# 运行
+if __name__ == "__main__":
+    prim('A')
+    kruskal()
